@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Convolution & ReLU Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .canvas-container {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 10px;
+            image-rendering: pixelated;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        select, input[type="range"] {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            accent-color: #667eea;
+        }
+        
+        .kernel-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-width: 150px;
+            margin: 0 auto;
+        }
+        
+        .kernel-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            background: #f0f0f0;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .explanation {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #2196f3;
+        }
+        
+        .highlight {
+            background: linear-gradient(90deg, #ffeb3b, #ffc107);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .animation-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ddd;
+            color: #666;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.2);
+        }
+        
+        @media (max-width: 768px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 CNN Convolution & ReLU Interactive Demo</h1>
+            <p>Explore how Convolutional Neural Networks process images through convolution and activation functions</p>
+        </div>
+
+        <div class="section">
+            <h2>📚 Understanding the Concepts</h2>
+            <div class="explanation">
+                <h3>What happens in a CNN layer?</h3>
+                <p><strong>1. Convolution (Linear Operation):</strong> A kernel (filter) slides across the input image, computing weighted sums of pixel neighborhoods. This detects features like edges, textures, and patterns.</p>
+                <p><strong>2. ReLU Activation (Non-linear):</strong> Applies the function max(0, x) to introduce non-linearity, creating sparsity and feature selectivity.</p>
+                <p><strong>3. Combined Effect:</strong> Linear convolution preserves spatial relationships while ReLU creates selective, sparse feature representations.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Interactive Convolution Demo</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label>Kernel Type:</label>
+                    <select id="kernelSelect">
+                        <option value="edge">Edge Detection</option>
+                        <option value="sharpen">Sharpen</option>
+                        <option value="blur">Blur</option>
+                        <option value="emboss">Emboss</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Input Pattern:</label>
+                    <select id="patternSelect">
+                        <option value="square">Square</option>
+                        <option value="circle">Circle</option>
+                        <option value="diagonal">Diagonal Lines</option>
+                        <option value="cross">Cross</option>
+                        <option value="noise">Random Noise</option>
+                    </select>
+                </div>
+                
+                <button onclick="applyConvolution()">Apply Convolution</button>
+                <button onclick="applyReLU()">Apply ReLU</button>
+                <button onclick="resetDemo()">Reset</button>
+            </div>
+
+            <div class="demo-container">
+                <div class="canvas-container">
+                    <h3>Input Image (8x8)</h3>
+                    <canvas id="inputCanvas" width="240" height="240"></canvas>
+                    <div class="kernel-display" id="kernelDisplay"></div>
+                    <p><strong>Current Kernel</strong></p>
+                </div>
+                
+                <div class="canvas-container">
+                    <h3>After Convolution</h3>
+                    <canvas id="convolutionCanvas" width="180" height="180"></canvas>
+                    <p><strong>Feature Map (6x6)</strong></p>
+                </div>
+            </div>
+
+            <div class="demo-container">
+                <div class="canvas-container">
+                    <h3>After ReLU Activation</h3>
+                    <canvas id="reluCanvas" width="180" height="180"></canvas>
+                    <p><strong>Activated Features</strong></p>
+                </div>
+                
+                <div class="canvas-container">
+                    <h3>Comparison View</h3>
+                    <canvas id="comparisonCanvas" width="180" height="180"></canvas>
+                    <p><strong>Before vs After ReLU</strong></p>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="sparsityValue">0%</div>
+                    <div>Sparsity (Zero Values)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeNeurons">0</div>
+                    <div>Active Neurons</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="maxActivation">0</div>
+                    <div>Max Activation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgActivation">0</div>
+                    <div>Avg Activation</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Step-by-Step Animation</h2>
+            
+            <div class="animation-controls">
+                <button onclick="startAnimation()">Start Animation</button>
+                <button onclick="pauseAnimation()">Pause</button>
+                <button onclick="stepAnimation()">Step Forward</button>
+            </div>
+
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+                <div class="step" id="step4">4</div>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <canvas id="animationCanvas" width="400" height="300"></canvas>
+            </div>
+
+            <div class="explanation" id="stepExplanation">
+                <h3>Step 1: Input Preparation</h3>
+                <p>We start with an input image. Each pixel has an intensity value that will be processed by our convolution kernel.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Deep Dive: How ReLU Affects Image Features</h2>
+            
+            <div class="explanation">
+                <h3>Linearity in Convolution</h3>
+                <p>Convolution is a <span class="highlight">linear operation</span> that preserves proportional relationships. If you double the input intensity, the output doubles too. This maintains the spatial structure and allows complex feature combinations.</p>
+                
+                <h3>ReLU Non-linearity Impact</h3>
+                <p>ReLU introduces <span class="highlight">thresholding behavior</span>:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Sparsity:</strong> 40-60% of values become zero, creating sparse representations</li>
+                    <li><strong>Selectivity:</strong> Only strong feature responses survive</li>
+                    <li><strong>Gradient Flow:</strong> Prevents vanishing gradients during training</li>
+                    <li><strong>Computational Efficiency:</strong> Zero values require no computation in subsequent layers</li>
+                </ul>
+                
+                <h3>Visual Effects on Images</h3>
+                <p>Early CNN layers with ReLU create <span class="highlight">high-contrast feature maps</span> where edges, corners, and textures are either strongly present (bright) or absent (dark). This builds the foundation for hierarchical feature detection in deeper layers.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let inputData = [];
+        let convolutionResult = [];
+        let reluResult = [];
+        let currentKernel = [];
+        let animationStep = 0;
+        let animationRunning = false;
+        let animationInterval;
+
+        // Predefined kernels
+        const kernels = {
+            edge: [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]],
+            sharpen: [[0, -1, 0], [-1, 5, -1], [0, -1, 0]],
+            blur: [[1/9, 1/9, 1/9], [1/9, 1/9, 1/9], [1/9, 1/9, 1/9]],
+            emboss: [[-2, -1, 0], [-1, 1, 1], [0, 1, 2]],
+            custom: [[1, 0, -1], [2, 0, -2], [1, 0, -1]]
+        };
+
+        // Initialize
+        function init() {
+            generatePattern('square');
+            updateKernel('edge');
+            drawInput();
+            updateKernelDisplay();
+        }
+
+        // Generate different input patterns
+        function generatePattern(type) {
+            inputData = Array(8).fill().map(() => Array(8).fill(0));
+            
+            switch(type) {
+                case 'square':
+                    for(let i = 2; i < 6; i++) {
+                        for(let j = 2; j < 6; j++) {
+                            inputData[i][j] = 255;
+                        }
+                    }
+                    break;
+                case 'circle':
+                    const center = 3.5;
+                    const radius = 2;
+                    for(let i = 0; i < 8; i++) {
+                        for(let j = 0; j < 8; j++) {
+                            const dist = Math.sqrt((i - center) ** 2 + (j - center) ** 2);
+                            if(dist <= radius) {
+                                inputData[i][j] = 255 * (1 - dist / radius);
+                            }
+                        }
+                    }
+                    break;
+                case 'diagonal':
+                    for(let i = 0; i < 8; i++) {
+                        inputData[i][i] = 255;
+                        if(i < 7) inputData[i][i+1] = 128;
+                        if(i > 0) inputData[i][i-1] = 128;
+                    }
+                    break;
+                case 'cross':
+                    for(let i = 0; i < 8; i++) {
+                        inputData[3][i] = 255;
+                        inputData[4][i] = 255;
+                        inputData[i][3] = 255;
+                        inputData[i][4] = 255;
+                    }
+                    break;
+                case 'noise':
+                    for(let i = 0; i < 8; i++) {
+                        for(let j = 0; j < 8; j++) {
+                            inputData[i][j] = Math.random() * 255;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // Update kernel
+        function updateKernel(type) {
+            currentKernel = kernels[type].map(row => [...row]);
+        }
+
+        // Draw input image
+        function drawInput() {
+            const canvas = document.getElementById('inputCanvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = 30;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for(let i = 0; i < 8; i++) {
+                for(let j = 0; j < 8; j++) {
+                    const intensity = Math.max(0, Math.min(255, inputData[i][j]));
+                    ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    
+                    // Add text overlay for values
+                    ctx.fillStyle = intensity > 128 ? 'black' : 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(Math.round(intensity), j * cellSize + cellSize/2, i * cellSize + cellSize/2 + 3);
+                }
+            }
+        }
+
+        // Update kernel display
+        function updateKernelDisplay() {
+            const display = document.getElementById('kernelDisplay');
+            display.innerHTML = '';
+            
+            for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'kernel-cell';
+                    cell.textContent = currentKernel[i][j].toFixed(1);
+                    
+                    // Color code kernel values
+                    const value = currentKernel[i][j];
+                    if(value > 0) {
+                        cell.style.backgroundColor = `rgba(76, 175, 80, ${Math.abs(value) / 8})`;
+                    } else if(value < 0) {
+                        cell.style.backgroundColor = `rgba(244, 67, 54, ${Math.abs(value) / 8})`;
+                    }
+                    
+                    display.appendChild(cell);
+                }
+            }
+        }
+
+        // Apply convolution
+        function applyConvolution() {
+            convolutionResult = [];
+            
+            for(let i = 0; i < 6; i++) {
+                convolutionResult[i] = [];
+                for(let j = 0; j < 6; j++) {
+                    let sum = 0;
+                    for(let ki = 0; ki < 3; ki++) {
+                        for(let kj = 0; kj < 3; kj++) {
+                            sum += inputData[i + ki][j + kj] * currentKernel[ki][kj];
+                        }
+                    }
+                    convolutionResult[i][j] = sum;
+                }
+            }
+            
+            drawConvolution();
+            updateStats();
+        }
+
+        // Draw convolution result
+        function drawConvolution() {
+            const canvas = document.getElementById('convolutionCanvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = 30;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Find min and max for normalization
+            const flatResult = convolutionResult.flat();
+            const minVal = Math.min(...flatResult);
+            const maxVal = Math.max(...flatResult);
+            const range = maxVal - minVal;
+            
+            for(let i = 0; i < 6; i++) {
+                for(let j = 0; j < 6; j++) {
+                    const value = convolutionResult[i][j];
+                    
+                    // Normalize to 0-255 for display
+                    const normalized = range > 0 ? ((value - minVal) / range) * 255 : 128;
+                    
+                    // Color code: positive values in green scale, negative in red scale
+                    let color;
+                    if(value > 0) {
+                        const intensity = Math.min(255, (value / maxVal) * 255);
+                        color = `rgb(0, ${intensity}, 0)`;
+                    } else if(value < 0) {
+                        const intensity = Math.min(255, Math.abs(value / minVal) * 255);
+                        color = `rgb(${intensity}, 0, 0)`;
+                    } else {
+                        color = 'rgb(128, 128, 128)';
+                    }
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    
+                    // Add text overlay
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(Math.round(value), j * cellSize + cellSize/2, i * cellSize + cellSize/2 + 3);
+                }
+            }
+        }
+
+        // Apply ReLU
+        function applyReLU() {
+            if(convolutionResult.length === 0) {
+                applyConvolution();
+            }
+            
+            reluResult = convolutionResult.map(row => 
+                row.map(val => Math.max(0, val))
+            );
+            
+            drawReLU();
+            drawComparison();
+            updateStats();
+        }
+
+        // Draw ReLU result
+        function drawReLU() {
+            const canvas = document.getElementById('reluCanvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = 30;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const maxVal = Math.max(...reluResult.flat());
+            
+            for(let i = 0; i < 6; i++) {
+                for(let j = 0; j < 6; j++) {
+                    const value = reluResult[i][j];
+                    const intensity = maxVal > 0 ? (value / maxVal) * 255 : 0;
+                    
+                    ctx.fillStyle = `rgb(0, ${intensity}, ${intensity})`;
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(Math.round(value), j * cellSize + cellSize/2, i * cellSize + cellSize/2 + 3);
+                }
+            }
+        }
+
+        // Draw comparison
+        function drawComparison() {
+            const canvas = document.getElementById('comparisonCanvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = 30;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for(let i = 0; i < 6; i++) {
+                for(let j = 0; j < 6; j++) {
+                    const originalVal = convolutionResult[i][j];
+                    const reluVal = reluResult[i][j];
+                    
+                    // Left half shows original, right half shows ReLU
+                    const leftColor = originalVal > 0 ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)';
+                    const rightColor = reluVal > 0 ? 'rgba(0, 255, 255, 0.7)' : 'rgba(128, 128, 128, 0.7)';
+                    
+                    ctx.fillStyle = leftColor;
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize/2, cellSize);
+                    
+                    ctx.fillStyle = rightColor;
+                    ctx.fillRect(j * cellSize + cellSize/2, i * cellSize, cellSize/2, cellSize);
+                    
+                    // Border
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            if(reluResult.length > 0) {
+                const flatRelu = reluResult.flat();
+                const zeroCount = flatRelu.filter(val => val === 0).length;
+                const sparsity = (zeroCount / flatRelu.length) * 100;
+                const activeNeurons = flatRelu.length - zeroCount;
+                const maxActivation = Math.max(...flatRelu);
+                const avgActivation = flatRelu.reduce((a, b) => a + b, 0) / flatRelu.length;
+                
+                document.getElementById('sparsityValue').textContent = sparsity.toFixed(1) + '%';
+                document.getElementById('activeNeurons').textContent = activeNeurons;
+                document.getElementById('maxActivation').textContent = maxActivation.toFixed(1);
+                document.getElementById('avgActivation').textContent = avgActivation.toFixed(1);
+            }
+        }
+
+        // Animation functions
+        function startAnimation() {
+            animationStep = 0;
+            animationRunning = true;
+            updateStepIndicator();
+            
+            animationInterval = setInterval(() => {
+                stepAnimation();
+            }, 2000);
+        }
+
+        function pauseAnimation() {
+            animationRunning = false;
+            clearInterval(animationInterval);
+        }
+
+        function stepAnimation() {
+            const canvas = document.getElementById('animationCanvas');
+            const ctx = canvas.getContext('2d');
+            const explanationDiv = document.getElementById('stepExplanation');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            switch(animationStep) {
+                case 0:
+                    drawAnimationStep1(ctx);
+                    explanationDiv.innerHTML = `
+                        <h3>Step 1: Input Preparation</h3>
+                        <p>We start with an input image. Each pixel has an intensity value that represents features like edges, textures, or patterns.</p>
+                    `;
+                    break;
+                case 1:
+                    drawAnimationStep2(ctx);
+                    explanationDiv.innerHTML = `
+                        <h3>Step 2: Convolution Operation</h3>
+                        <p>The kernel slides across the input, computing weighted sums. This <span class="highlight">linear operation</span> detects specific features based on the kernel pattern.</p>
+                    `;
+                    break;
+                case 2:
+                    drawAnimationStep3(ctx);
+                    explanationDiv.innerHTML = `
+                        <h3>Step 3: Feature Map Generation</h3>
+                        <p>Convolution produces a feature map with both positive and negative values, representing feature presence and absence.</p>
+                    `;
+                    break;
+                case 3:
+                    drawAnimationStep4(ctx);
+                    explanationDiv.innerHTML = `
+                        <h3>Step 4: ReLU Activation</h3>
+                        <p>ReLU zeros out negative values, creating <span class="highlight">sparsity</span> and <span class="highlight">selectivity</span>. Only strong positive features survive.</p>
+                    `;
+                    break;
+            }
+            
+            updateStepIndicator();
+            animationStep = (animationStep + 1) % 4;
+            
+            if(animationStep === 0 && animationRunning) {
+                clearInterval(animationInterval);
+                animationRunning = false;
+            }
+        }
+
+        function updateStepIndicator() {
+            for(let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.toggle('active', i === animationStep + 1);
+            }
+        }
+
+        // Animation drawing functions
+        function drawAnimationStep1(ctx) {
+            // Draw input grid
+            const startX = 50;
+            const startY = 50;
+            const cellSize = 25;
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.fillText('Input Image (8x8)', startX, startY - 10);
+            
+            for(let i = 0; i < 8; i++) {
+                for(let j = 0; j < 8; j++) {
+                    const intensity = inputData[i][j];
+                    ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                    ctx.fillRect(startX + j * cellSize, startY + i * cellSize, cellSize, cellSize);
+                    ctx.strokeStyle = '#333';
+                    ctx.strokeRect(startX + j * cellSize, startY + i * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        function drawAnimationStep2(ctx) {
+            drawAnimationStep1(ctx);
+            
+            // Draw kernel
+            const kernelX = 300;
+            const kernelY = 80;
+            const kernelSize = 30;
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.fillText('Convolution Kernel', kernelX, kernelY - 10);
+            
+            for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    const value = currentKernel[i][j];
+                    ctx.fillStyle = value > 0 ? '#4CAF50' : value < 0 ? '#F44336' : '#999';
+                    ctx.fillRect(kernelX + j * kernelSize, kernelY + i * kernelSize, kernelSize, kernelSize);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(value.toFixed(1), kernelX + j * kernelSize + kernelSize/2, kernelY + i * kernelSize + kernelSize/2 + 4);
+                }
+            }
+            
+            // Draw sliding animation
+            const slideX = 50 + (animationStep % 6) * 25;
+            const slideY = 50 + Math.floor(animationStep / 6) * 25;
+            
+            ctx.strokeStyle = '#FF5722';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(slideX, slideY, 75, 75);
+        }
+
+        function drawAnimationStep3(ctx) {
+            drawAnimationStep1(ctx);
+            
+            // Draw feature map
+            const featureX = 280;
+            const featureY = 50;
+            const featureSize = 25;
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.fillText('Feature Map (6x6)', featureX, featureY - 10);
+            
+            if(convolutionResult.length > 0) {
+                const flatResult = convolutionResult.flat();
+                const minVal = Math.min(...flatResult);
+                const maxVal = Math.max(...flatResult);
+                
+                for(let i = 0; i < 6; i++) {
+                    for(let j = 0; j < 6; j++) {
+                        const value = convolutionResult[i][j];
+                        let color;
+                        if(value > 0) {
+                            const intensity = Math.min(255, (value / maxVal) * 255);
+                            color = `rgb(0, ${intensity}, 0)`;
+                        } else if(value < 0) {
+                            const intensity = Math.min(255, Math.abs(value / minVal) * 255);
+                            color = `rgb(${intensity}, 0, 0)`;
+                        } else {
+                            color = 'rgb(128, 128, 128)';
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(featureX + j * featureSize, featureY + i * featureSize, featureSize, featureSize);
+                        ctx.strokeStyle = '#333';
+                        ctx.strokeRect(featureX + j * featureSize, featureY + i * featureSize, featureSize, featureSize);
+                    }
+                }
+            }
+        }
+
+        function drawAnimationStep4(ctx) {
+            drawAnimationStep3(ctx);
+            
+            // Draw ReLU result
+            const reluX = 50;
+            const reluY = 220;
+            const reluSize = 25;
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.fillText('After ReLU Activation (6x6)', reluX, reluY - 10);
+            
+            if(reluResult.length > 0) {
+                const maxVal = Math.max(...reluResult.flat());
+                
+                for(let i = 0; i < 6; i++) {
+                    for(let j = 0; j < 6; j++) {
+                        const value = reluResult[i][j];
+                        const intensity = maxVal > 0 ? (value / maxVal) * 255 : 0;
+                        
+                        ctx.fillStyle = value > 0 ? `rgb(0, ${intensity}, ${intensity})` : 'rgb(64, 64, 64)';
+                        ctx.fillRect(reluX + j * reluSize, reluY + i * reluSize, reluSize, reluSize);
+                        ctx.strokeStyle = '#333';
+                        ctx.strokeRect(reluX + j * reluSize, reluY + i * reluSize, reluSize, reluSize);
+                    }
+                }
+            }
+            
+            // Draw comparison arrows
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(280, 180);
+            ctx.lineTo(200, 220);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#2196F3';
+            ctx.font = '14px Arial';
+            ctx.fillText('ReLU: max(0, x)', 210, 210);
+        }
+
+        // Event listeners
+        document.getElementById('kernelSelect').addEventListener('change', function(e) {
+            updateKernel(e.target.value);
+            updateKernelDisplay();
+            convolutionResult = [];
+            reluResult = [];
+            
+            // Clear result canvases
+            const canvases = ['convolutionCanvas', 'reluCanvas', 'comparisonCanvas'];
+            canvases.forEach(id => {
+                const canvas = document.getElementById(id);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        });
+
+        document.getElementById('patternSelect').addEventListener('change', function(e) {
+            generatePattern(e.target.value);
+            drawInput();
+            convolutionResult = [];
+            reluResult = [];
+            
+            // Clear result canvases
+            const canvases = ['convolutionCanvas', 'reluCanvas', 'comparisonCanvas'];
+            canvases.forEach(id => {
+                const canvas = document.getElementById(id);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        });
+
+        function resetDemo() {
+            convolutionResult = [];
+            reluResult = [];
+            
+            // Clear all result canvases
+            const canvases = ['convolutionCanvas', 'reluCanvas', 'comparisonCanvas'];
+            canvases.forEach(id => {
+                const canvas = document.getElementById(id);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            // Reset stats
+            document.getElementById('sparsityValue').textContent = '0%';
+            document.getElementById('activeNeurons').textContent = '0';
+            document.getElementById('maxActivation').textContent = '0';
+            document.getElementById('avgActivation').textContent = '0';
+            
+            // Reset animation
+            pauseAnimation();
+            animationStep = 0;
+            updateStepIndicator();
+            
+            const animCanvas = document.getElementById('animationCanvas');
+            const animCtx = animCanvas.getContext('2d');
+            animCtx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+        }
+
+        // Initialize the demo
+        window.onload = function() {
+            init();
+        };
+    </script>
+</body>
+</html>
