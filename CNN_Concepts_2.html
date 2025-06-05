@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive CNN Mentor - Padding & Stride</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+      gap: 4px;
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      line-height: 30px;
+      border: 1px solid #ccc;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    .input-cell { background-color: #bee3f8; }
+    .kernel-cell { background-color: #fed7d7; }
+    .output-cell { background-color: #c6f6d5; }
+    .highlight { background-color: #fbb6ce !important; }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-6">🧠 CNN Mentor: Learn Like You're 5</h1>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-2">🧸 What’s the difference between MLP and CNN?</h2>
+      <p class="mb-4">Imagine you’re looking at a picture. A regular neural network (MLP) sees the picture like it’s a really long row of pixels, and it doesn’t know which parts are close together. But a CNN is smarter—it looks at the picture like how we look at it—with eyes that focus on small parts, like a window sliding across.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-bold mb-2">MLP</h3>
+          <img src="https://i.stack.imgur.com/WCpD8.png" alt="MLP gif" class="rounded shadow">
+          <p class="mt-2 text-sm text-gray-600">MLP flattens the image and connects every pixel to every node.</p>
+        </div>
+        <div>
+          <h3 class="font-bold mb-2">CNN</h3>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png" alt="CNN gif" class="rounded shadow">
+          <p class="mt-2 text-sm text-gray-600">CNN uses filters to slide over the image and learn patterns.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-2">🧩 What is Padding?</h2>
+      <p class="mb-4">Padding is like putting a frame around your picture. It helps the filters not miss the edges when they slide.</p>
+      <img src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*HZsD7Lgdiw_Fh0eL4Zx3oQ.gif" alt="Padding gif" class="rounded shadow mx-auto mb-4">
+      <p class="text-sm text-gray-600">Padding helps maintain output size or reduce it less aggressively.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-2">👟 What is Stride?</h2>
+      <p class="mb-4">Stride is how far the window jumps as it slides over the image. A stride of 1 means small steps, stride of 2 means big hops!</p>
+      <img src="https://miro.medium.com/v2/resize:fit:800/format:webp/1*YsX2D_7Paa6i0UD7E8PMWg.gif" alt="Stride gif" class="rounded shadow mx-auto mb-4">
+      <p class="text-sm text-gray-600">Bigger stride = faster scanning, but less detail.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-2">🏊 What is Pooling?</h2>
+      <p class="mb-4">Pooling is like picking only the best parts from small pieces of your image. Max pooling takes the biggest number. It helps reduce the size.</p>
+      <img src="https://miro.medium.com/v2/resize:fit:1200/format:webp/1*jD6A5dfnB__nYxCBAW1D5g.gif" alt="Pooling gif" class="rounded shadow mx-auto mb-4">
+      <p class="text-sm text-gray-600">Pooling helps make CNNs faster and more efficient by shrinking the data.</p>
+    </div>
+
+    <div class="text-center">
+      <button onclick="switchTab('simple')" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-full">🧪 Try It Yourself</button>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabName) {
+      window.location.hash = tabName;
+      location.reload();
+    }
+  </script>
+</body>
+</html>

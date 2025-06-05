@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Fully Connected Layers to Convolutions</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/Babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // React Component for the main app
+    const App = () => {
+      const [mode, setMode] = useState('MLP'); // Toggle between MLP and CNN
+
+      // p5.js sketch for MLP visualization
+      const mlpSketch = (sketch) => {
+        sketch.setup = () => {
+          sketch.createCanvas(300, 300);
+          sketch.background(255);
+        };
+        sketch.draw = () => {
+          sketch.background(255);
+          // Draw input layer (simplified 5x5 image)
+          for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+              sketch.fill(200);
+              sketch.rect(i * 20 + 50, j * 20 + 50, 18, 18);
+            }
+          }
+          // Draw hidden layer (5 nodes)
+          for (let i = 0; i < 5; i++) {
+            sketch.fill(100);
+            sketch.ellipse(200, i * 40 + 70, 20, 20);
+          }
+          // Draw connections
+          sketch.stroke(0);
+          for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+              for (let k = 0; k < 5; k++) {
+                sketch.line(i * 20 + 59, j * 20 + 59, 200, k * 40 + 70);
+              }
+            }
+          }
+          sketch.noStroke();
+        };
+      };
+
+      // p5.js sketch for CNN visualization
+      const cnnSketch = (sketch) => {
+        let x = 0;
+        let y = 0;
+        let speed = 2;
+        sketch.setup = () => {
+          sketch.createCanvas(300, 300);
+          sketch.background(255);
+        };
+        sketch.draw = () => {
+          sketch.background(255);
+          // Draw input image (simplified 10x10 grid)
+          for (let i = 0; i < 10; i++) {
+            for (let j = 0; j < 10; j++) {
+              sketch.fill(200);
+              sketch.rect(i * 20 + 50, j * 20 + 50, 18, 18);
+            }
+          }
+          // Draw 3x3 filter sliding over image
+          sketch.fill(255, 165, 0, 150);
+          sketch.rect(x + 50, y + 50, 58, 58);
+          x += speed;
+          if (x > 120) {
+            x = 0;
+            y += 60;
+            if (y > 120) y = 0;
+          }
+          // Draw feature map (simplified 4x4)
+          for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+              sketch.fill(100, 150, 255);
+              sketch.rect(i * 20 + 200, j * 20 + 50, 18, 18);
+            }
+          }
+        };
+      };
+
+      // Initialize p5.js sketches
+      useEffect(() => {
+        const mlpCanvas = new p5(mlpSketch, document.getElementById('mlp-canvas'));
+        const cnnCanvas = new p5(cnnSketch, document.getElementById('cnn-canvas'));
+        return () => {
+          mlpCanvas.remove();
+          cnnCanvas.remove();
+        };
+      }, []);
+
+      return (
+        <div className="min-h-screen bg-gray-100 p-6">
+          <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">
+            From Fully Connected Layers to Convolutions
+          </h1>
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-8">
+            This interactive page explains the transition from fully connected layers (MLPs) to convolutional layers (CNNs) for processing high-dimensional data like images. We'll explore why MLPs are constrained, how CNNs overcome these limitations, and the key concepts of locality and translation invariance, using the example of distinguishing cats from dogs.
+          </p>
+
+          <div className="max-w-4xl mx-auto space-y-12">
+            {/* Why MLPs Are Constrained */}
+            <section className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+                Why MLPs Are Constrained
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Multi-Layer Perceptrons (MLPs) use fully connected layers, where every input is connected to every neuron in the next layer. For a 1-megapixel image (1,000,000 pixels), even a hidden layer of 1,000 units requires 1 billion parameters, making training computationally expensive and prone to overfitting.
+              </p>
+              <p className="text-gray-600 mb-4">
+                MLPs treat all pixels equally, ignoring the spatial structure of images, and lack invariance to transformations like translations. This means they must learn patterns like a cat's ear separately for every position, requiring vast data and resources.
+              </p>
+              <div id="mlp-canvas" className="mx-auto"></div>
+              <p className="text-sm text-gray-500 text-center mt-2">
+                Visualization: MLP with a 5x5 input image connected to 5 hidden units, showing dense connections (125 parameters).
+              </p>
+            </section>
+
+            {/* Transition to CNNs */}
+            <section className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+                Transition to Convolutional Neural Networks (CNNs)
+              </h2>
+              <p className="text-gray-600 mb-4">
+                CNNs address MLP limitations by using convolutional layers with small filters (e.g., 3x3) that slide over the image, detecting local patterns like edges. These filters share weights across the image, reducing parameters (e.g., 9 weights for a 3x3 filter) and preserving spatial structure.
+              </p>
+              <p className="text-gray-600 mb-4">
+                Pooling layers downsample feature maps, enhancing robustness to small translations. This makes CNNs efficient and effective for tasks like distinguishing cats from dogs, requiring fewer parameters and less data.
+              </p>
+              <div id="cnn-canvas" className="mx-auto"></div>
+              <p className="text-sm text-gray-500 text-center mt-2">
+                Visualization: CNN with a 3x3 filter sliding over a 10x10 image, producing a feature map.
+              </p>
+            </section>
+
+            {/* Locality */}
+            <section className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+                Locality
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Locality is the principle that nearby pixels in an image are more likely to be related than distant ones, forming patterns like edges or textures. CNNs exploit this by applying filters to small local regions (e.g., 3x3), reducing parameters and focusing on meaningful local correlations.
+              </p>
+              <p className="text-gray-600 mb-4">
+                Unlike MLPs, which connect all pixels globally, CNNs assume that local patterns are sufficient for feature detection, making them computationally efficient.
+              </p>
+            </section>
+
+            {/* Translation Invariance */}
+            <section className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+                Translation Invariance
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Translation invariance allows CNNs to recognize patterns (e.g., a cat's ear) regardless of their position in the image. This is achieved through weight sharing, where the same filter is applied across all regions, and pooling layers, which summarize local regions to reduce sensitivity to small shifts.
+              </p>
+              <p className="text-gray-600 mb-4">
+                MLPs lack this property, requiring separate learning for each position, which is inefficient. CNNs generalize better, needing less data to learn robust patterns.
+              </p>
+            </section>
+
+            {/* Interactive Example */}
+            <section className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+                Interactive Example: MLP vs. CNN
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Toggle between MLP and CNN to see how they process a 5x5 image (25 pixels) for cat vs. dog classification.
+              </p>
+              <div className="flex justify-center space-x-4 mb-4">
+                <button
+                  onClick={() => setMode('MLP')}
+                  className={`px-4 py-2 rounded-lg ${mode === 'MLP' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                >
+                  MLP
+                </button>
+                <button
+                  onClick={() => setMode('CNN')}
+                  className={`px-4 py-2 rounded-lg ${mode === 'CNN' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                >
+                  CNN
+                </button>
+              </div>
+              <p className="text-gray-600">
+                {mode === 'MLP' ? (
+                  <>
+                    <strong>MLP Processing:</strong> For a 5x5 image with a hidden layer of 5 units, an MLP requires 25 × 5 = 125 parameters. It treats all pixels equally, ignoring spatial structure, and lacks translation invariance.
+                  </>
+                ) : (
+                  <>
+                    <strong>CNN Processing:</strong> For the same 5x5 image, a CNN with a 3x3 filter requires only 9 parameters. It detects local patterns and shares weights, achieving translation invariance.
+                  </>
+                )}
+              </p>
+            </section>
+          </div>
+
+          <footer className="text-center text-gray-500 mt-12">
+            <p>Built with React, p5.js, and Tailwind CSS. Learn more at <a href="https://d2l.ai" className="text-blue-500">Dive into Deep Learning</a>.</p>
+          </footer>
+        </div>
+      );
+    };
+
+    // Render the app
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Multiple Input/Output Channels Interactive Demo</title>
+    <!-- Original CSS remains unchanged -->
+    <style>
+        /* Original CSS from your code */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 20px 0;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .demo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .channel-viz {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .channel {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .channel:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .red-channel { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        .green-channel { background: linear-gradient(45deg, #51cf66, #40c057); }
+        .blue-channel { background: linear-gradient(45deg, #339af0, #228be6); }
+        .feature-channel { background: linear-gradient(45deg, #9775fa, #7c3aed); }
+        .output-channel { background: linear-gradient(45deg, #ffd43b, #fab005); }
+        .arrow {
+            font-size: 2rem;
+            color: #667eea;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        .filter-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .filter-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .filter-box:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .filter-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+            max-width: 120px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .matrix-cell {
+            width: 30px;
+            height: 30px;
+            background: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .control-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .architecture-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .layer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        .layer.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #e8f0fe, #f3e5f5);
+            transform: scale(1.02);
+        }
+        .layer-info {
+            text-align: center;
+            min-width: 120px;
+        }
+        .channels-display {
+            display: flex;
+            gap: 5px;
+        }
+        .mini-channel {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            background: #667eea;
+            transition: all 0.3s ease;
+        }
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+            animation: highlight 2s ease-in-out;
+        }
+        @keyframes highlight {
+            0%, 100% { background: rgba(255, 255, 0, 0.3); }
+            50% { background: rgba(255, 255, 0, 0.6); }
+        }
+        .interactive-section {
+            border: 3px dashed #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+        }
+        @media (max-width: 768px) {
+            .channel-viz {
+                flex-direction: column;
+            }
+            .channel {
+                width: 60px;
+                height: 60px;
+            }
+            .filter-demo {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 CNN Multiple Input/Output Channels</h1>
+            <p>Interactive Deep Learning Visualization</p>
+        </div>
+
+        <!-- Introduction Section -->
+        <div class="section">
+            <h2>🎯 What are Multiple Channels in CNNs?</h2>
+            <p>In Convolutional Neural Networks, channels represent different feature maps or dimensions of data. Think of channels as different "views" or "perspectives" of the same information, allowing the network to process and learn diverse patterns simultaneously.</p>
+            <div class="info-box">
+                <strong>Key Concept:</strong> Multiple channels enable CNNs to extract rich, hierarchical features from input data, progressively building from simple edges to complex objects.
+            </div>
+        </div>
+
+        <!-- Multiple Input Channels Demo -->
+        <div class="section">
+            <h2>📥 Multiple Input Channels</h2>
+            <p>When processing colored images, CNNs work with multiple input channels simultaneously. Let's see how an RGB image is processed:</p>
+            <div class="interactive-section">
+                <div class="demo-container">
+                    <h3>RGB Image Input (3 Channels)</h3>
+                    <div class="channel-viz" id="inputChannels">
+                        <div class="channel red-channel" data-channel="red">R<br><small>Red</small></div>
+                        <div class="channel green-channel" data-channel="green">G<br><small>Green</small></div>
+                        <div class="channel blue-channel" data-channel="blue">B<br><small>Blue</small></div>
+                    </div>
+                    <div class="arrow">⬇️</div>
+                    <p><strong>Convolution Operation</strong></p>
+                    <div class="arrow">⬇️</div>
+                    <div class="channel-viz">
+                        <div class="channel feature-channel">Feature<br>Map</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="control-btn demonstrate-conv-btn">🔄 Show Convolution Process</button>
+                <button class="control-btn reset-demo-btn">🔄 Reset Demo</button>
+            </div>
+            <div class="info-box">
+                <strong>How it works:</strong> Each filter has the same depth as the input (3 for RGB). The convolution computes: <code>output = R_filter × R_channel + G_filter × G_channel + B_filter × B_channel</code>
+            </div>
+        </div>
+
+        <!-- Filter Demonstration -->
+        <div class="section">
+            <h2>🔍 Filter Structure for Multiple Input Channels</h2>
+            <p>A single filter for RGB input actually consists of 3 separate 2D filters:</p>
+            <div class="filter-demo">
+                <div class="filter-box">
+                    <h4>Red Channel Filter</h4>
+                    <div class="filter-matrix">
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                        <div class="matrix-cell">-2</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">2</div>
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                    </div>
+                    <p><small>Detects vertical edges in red channel</small></p>
+                </div>
+                <div class="filter-box">
+                    <h4>Green Channel Filter</h4>
+                    <div class="filter-matrix">
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                        <div class="matrix-cell">-2</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">2</div>
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                    </div>
+                    <p><small>Detects vertical edges in green channel</small></p>
+                </div>
+                <div class="filter-box">
+                    <h4>Blue Channel Filter</h4>
+                    <div class="filter-matrix">
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                        <div class="matrix-cell">-2</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">2</div>
+                        <div class="matrix-cell">-1</div>
+                        <div class="matrix-cell">0</div>
+                        <div class="matrix-cell">1</div>
+                    </div>
+                    <p><small>Detects vertical edges in blue channel</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Output Channels Demo -->
+        <div class="section">
+            <h2>📤 Multiple Output Channels</h2>
+            <p>By using multiple filters, we can detect different features and create multiple output channels:</p>
+            <div class="interactive-section">
+                <div class="demo-container">
+                    <h3>Single Input → Multiple Outputs</h3>
+                    <div class="channel-viz">
+                        <div class="channel red-channel">RGB<br>Input</div>
+                    </div>
+                    <div class="arrow">⬇️</div>
+                    <p><strong>Multiple Filters Applied</strong></p>
+                    <div class="arrow">⬇️</div>
+                    <div class="channel-viz" id="outputChannels">
+                        <div class="channel output-channel" data-feature="edges">Edges</div>
+                        <div class="channel output-channel" data-feature="texture">Texture</div>
+                        <div class="channel output-channel" data-feature="corners">Corners</div>
+                        <div class="channel output-channel" data-feature="blobs">Blobs</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="control-btn animate-feature-btn">🎭 Animate Feature Detection</button>
+                <button class="control-btn add-channels-btn">➕ Add More Channels</button>
+            </div>
+        </div>
+
+        <!-- CNN Architecture Flow -->
+        <div class="section">
+            <h2>🏗️ CNN Architecture: Progressive Channel Evolution</h2>
+            <p>Watch how channels evolve through a typical CNN architecture:</p>
+            <div class="architecture-demo" id="architectureDemo">
+                <div class="layer" data-layer="0">
+                    <div class="layer-info">
+                        <strong>Input Layer</strong><br>
+                        <small>224×224×3</small>
+                    </div>
+                    <div class="channels-display">
+                        <div class="mini-channel" style="background: #ff6b6b;"></div>
+                        <div class="mini-channel" style="background: #51cf66;"></div>
+                        <div class="mini-channel" style="background: #339af0;"></div>
+                    </div>
+                </div>
+                <div class="arrow">⬇️</div>
+                <div class="layer" data-layer="1">
+                    <div class="layer-info">
+                        <strong>Conv Layer 1</strong><br>
+                        <small>224×224×32</small>
+                    </div>
+                    <div class="channels-display" id="layer1Channels"></div>
+                </div>
+                <div class="arrow">⬇️</div>
+                <div class="layer" data-layer="2">
+                    <div class="layer-info">
+                        <strong>Conv Layer 2</strong><br>
+                        <small>112×112×64</small>
+                    </div>
+                    <div class="channels-display" id="layer2Channels"></div>
+                </div>
+                <div class="arrow">⬇️</div>
+                <div class="layer" data-layer="3">
+                    <div class="layer-info">
+                        <strong>Conv Layer 3</strong><br>
+                        <small>56×56×128</small>
+                    </div>
+                    <div class="channels-display" id="layer3Channels"></div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="control-btn animate-arch-btn">🎬 Animate Architecture Flow</button>
+                <button class="control-btn explain-layer-btn">📚 Explain Current Layer</button>
+            </div>
+        </div>
+
+        <!-- Code Example -->
+        <div class="section">
+            <h2>💻 Code Example: PyTorch Implementation</h2>
+            <div class="code-example">
+<pre id="codeExample">
+import torch
+import torch.nn as nn
+
+class MultiChannelCNN(nn.Module):
+    def __init__(self):
+        super(MultiChannelCNN, self).__init__()
+        
+        # Layer 1: 3 input channels → 32 output channels
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, 
+                              kernel_size=3, padding=1)
+        
+        # Layer 2: 32 input channels → 64 output channels  
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64,
+                              kernel_size=3, padding=1)
+        
+        # Layer 3: 64 input channels → 128 output channels
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128,
+                              kernel_size=3, padding=1)
+        
+        self.pool = nn.MaxPool2d(2, 2)
+        self.relu = nn.ReLU()
+    
+    def forward(self, x):
+        # x shape: [batch_size, 3, 224, 224] (RGB input)
+        
+        x = self.relu(self.conv1(x))  # [batch_size, 32, 224, 224]
+        x = self.pool(x)              # [batch_size, 32, 112, 112]
+        
+        x = self.relu(self.conv2(x))  # [batch_size, 64, 112, 112]
+        x = self.pool(x)              # [batch_size, 64, 56, 56]
+        
+        x = self.relu(self.conv3(x))  # [batch_size, 128, 56, 56]
+        x = self.pool(x)              # [batch_size, 128, 28, 28]
+        
+        return x
+</pre>
+            </div>
+            <div class="controls">
+                <button class="control-btn highlight-code-btn">✨ Highlight Key Parts</button>
+            </div>
+        </div>
+
+        <!-- Real-world Applications -->
+        <div class="section">
+            <h2>🌍 Real-world Applications</h2>
+            <div class="filter-demo">
+                <div class="filter-box">
+                    <h4>🖼️ Image Classification</h4>
+                    <p>Multiple channels help identify objects by combining color, texture, and shape information from different feature maps.</p>
+                </div>
+                <div class="filter-box">
+                    <h4>🏥 Medical Imaging</h4>
+                    <p>Different channels can represent various imaging modalities (CT, MRI) or highlight different tissue types.</p>
+                </div>
+                <div class="filter-box">
+                    <h4>🚗 Autonomous Vehicles</h4>
+                    <p>Channels process RGB, depth, and infrared data simultaneously for comprehensive scene understanding.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
