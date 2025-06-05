@@ -14,8 +14,8 @@ The key properties of convolution in CNNs are:
 The key benefits of locality in CNNs are:
 
 * **Efficient feature extraction**: By focusing on local regions of the input, CNNs can efficiently extract and learn local features, such as edges, shapes, and textures, which are important for tasks like image recognition.
-Reduced number of parameters: The local connectivity in CNNs results in a significantly smaller number of parameters compared to a fully connected network, as each neuron is only connected to a small region of the previous layer. This makes CNNs more efficient and easier to train.
-Spatial invariance: The local connectivity and shared weights in CNNs allow the network to detect the same features regardless of their position in the input, which is known as translation invariance. This property makes CNNs more robust to spatial transformations, such as translation, rotation, and scaling.
-Hierarchical feature learning: By stacking multiple convolutional layers, CNNs can learn a hierarchy of features, where the lower layers learn simple, local features, and the higher layers learn more complex, global features.
+* **Reduced number of parameters**: The local connectivity in CNNs results in a significantly smaller number of parameters compared to a fully connected network, as each neuron is only connected to a small region of the previous layer. This makes CNNs more efficient and easier to train.
+* **Spatial invariance**: The local connectivity and shared weights in CNNs allow the network to detect the same features regardless of their position in the input, which is known as translation invariance. This property makes CNNs more robust to spatial transformations, such as translation, rotation, and scaling.
+* **Hierarchical feature learning**: By stacking multiple convolutional layers, CNNs can learn a hierarchy of features, where the lower layers learn simple, local features, and the higher layers learn more complex, global features.
 
 **Convolution** :The convolution operation involves sliding a small filter (also called a kernel or feature detector) across the input, and computing the dot product between the filter and the underlying region of the input. This process is repeated for every position of the input, resulting in a feature map that represents the presence and location of the detected features.
